@@ -18,8 +18,10 @@ import { createItemFromString } from '../services/itemFactory';
 import { inferStatFromText } from '../services/statInference';
 import { generateSideQuests, checkQuestProgress } from '../services/questSystem';
 import { calculateInjury, calculateHotStreak } from '../services/statusEffects';
-import { Menu, Send, Settings, Dices, AlertTriangle, CheckCircle2, Skull, Sparkles, User, Backpack, Sword, Zap, Shield, Brain, Crown, Circle, Eye, Clover, Terminal, Loader2, RefreshCw, ChevronRight, Trophy } from 'lucide-react';
+import { Menu, Send, Settings, Dices, AlertTriangle, CheckCircle2, Skull, Sparkles, User, Backpack, Sword, Zap, Shield, Brain, Crown, Circle, Eye, Clover, Terminal, Loader2, RefreshCw, ChevronRight, Trophy, Cloud, CloudLightning } from 'lucide-react';
 import { DebugConsole, LogEntry } from './DebugConsole';
+import { createClient } from '../utils/supabase/client';
+import { AuthScreen } from './AuthScreen';
 
 const BASE_HP = 100;
 const DEFAULT_STATS = { STR: 10, DEX: 10, CON: 10, INT: 10, CHA: 10, PER: 10, LUK: 10 };
@@ -141,6 +143,20 @@ const App: React.FC = () => {
   // Debug Console State
   const [showDebug, setShowDebug] = useState(false);
   const [debugLogs, setDebugLogs] = useState<LogEntry[]>([]);
+
+  // Auth State
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setAuthLoading(false);
+    };
+    checkUser();
+  }, []);
 
   // Auto-open Game Over screen when game ends
   useEffect(() => {
@@ -1155,6 +1171,65 @@ const App: React.FC = () => {
     };
     reader.readAsText(file);
   };
+
+  const handleCloudSave = async () => {
+    if (!user) return;
+    
+    const saveData = {
+        gameState,
+        currentChoices,
+        settings,
+        timestamp: Date.now(),
+        version: "1.5"
+    };
+
+    const { error } = await supabase
+      .from('saves')
+      .insert({
+        user_id: user.id,
+        character_name: gameState.stats ? `Hero of ${gameState.genre}` : 'Unknown Hero',
+        genre: gameState.genre,
+        level: 1, 
+        game_state: saveData
+      });
+
+    if (error) {
+      addLog('error', `Cloud Save Failed: ${error.message}`);
+      alert('Failed to save to cloud!');
+    } else {
+      addLog('info', 'Game saved to cloud successfully');
+      alert('Game saved to cloud!');
+    }
+  };
+
+  const handleCloudLoad = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+          .from('saves')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+
+      if (error) {
+          addLog('error', `Cloud Load Failed: ${error.message}`);
+          alert('Failed to load from cloud!');
+          return;
+      }
+
+      if (data && data.game_state) {
+          const loadedData = data.game_state as SaveData;
+          setGameState(loadedData.gameState);
+          setCurrentChoices(loadedData.currentChoices);
+          setSettings(loadedData.settings);
+          addLog('info', 'Game loaded from cloud successfully');
+          alert('Game loaded from cloud!');
+      } else {
+          alert('No cloud save found.');
+      }
+  };
   
   const handleDownloadLog = () => {
     const logContent = gameState.history.map(turn => {
@@ -1203,6 +1278,14 @@ const App: React.FC = () => {
     );
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-zinc-500">
+        <Loader2 className="animate-spin" size={32} />
+      </div>
+    );
+  }
+
   return (
     <div 
       className="flex h-screen bg-black text-zinc-100 font-sans overflow-hidden relative transition-all duration-300"
@@ -1213,6 +1296,12 @@ const App: React.FC = () => {
           height: `${100 / (settings.uiScale || 1)}vh`
       }}
     >
+      {!user && (
+        <AuthScreen onAuthSuccess={async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        }} />
+      )}
       
       {/* --- Settings Button (Menu & Setup Phases) --- */}
       {gameState.phase !== 'playing' && gameState.phase !== 'game_over' && (
@@ -1546,6 +1635,8 @@ const App: React.FC = () => {
         onSaveGame={handleSaveGame}
         onLoadGame={handleLoadGame}
         onResetGame={handleRestart}
+        onCloudSave={handleCloudSave}
+        onCloudLoad={handleCloudLoad}
       />
       
       <CustomChoiceModal

@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { AppSettings, ImageSize, StoryModel, UIScale } from '../types';
-import { X, Settings, Image as ImageIcon, Zap, Brain, Save, Upload, RotateCcw, AlertTriangle, Monitor, ZoomIn, Activity, BrainCircuit, Dices } from 'lucide-react';
+import { X, Settings, Image as ImageIcon, Zap, Brain, Save, Upload, RotateCcw, AlertTriangle, Monitor, ZoomIn, Activity, BrainCircuit, Dices, Cloud, CloudLightning } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,6 +13,8 @@ interface SettingsModalProps {
   onSaveGame: () => void;
   onLoadGame: (file: File) => void;
   onResetGame: () => void;
+  onCloudSave?: () => void;
+  onCloudLoad?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -24,7 +26,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   hasApiKey,
   onSaveGame,
   onLoadGame,
-  onResetGame
+  onResetGame,
+  onCloudSave,
+  onCloudLoad
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,6 +90,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     accept=".json" 
                     className="hidden" 
                     />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <button 
+                    onClick={onCloudSave}
+                    className="flex flex-col items-center gap-2 p-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded transition-colors text-zinc-300"
+                    >
+                    <Cloud size={20} className="text-purple-500" />
+                    <span className="text-xs font-bold">Cloud Save</span>
+                    </button>
+                    
+                    <button 
+                    onClick={onCloudLoad}
+                    className="flex flex-col items-center gap-2 p-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded transition-colors text-zinc-300"
+                    >
+                    <CloudLightning size={20} className="text-yellow-500" />
+                    <span className="text-xs font-bold">Cloud Load</span>
+                    </button>
                 </div>
 
                 <button 
