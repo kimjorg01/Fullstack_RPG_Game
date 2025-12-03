@@ -1,14 +1,7 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
+import { generateContentServer } from "../app/actions";
 import { AIStoryResponse, ImageSize, StoryModel, CharacterStats, RollResult, InventoryItem, EquippedGear, StatusEffect, NPC, MainStoryArc, GameLength } from "../types";
-
-const getAIClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    console.warn("API Key not found in process.env");
-  }
-  return new GoogleGenAI({ apiKey: apiKey });
-};
 
 const SYSTEM_INSTRUCTION = `
 You are the Dungeon Master for an immersive, infinite RPG.
@@ -58,8 +51,6 @@ export const generateMainStory = async (
     gameLength: GameLength,
     onLog?: (type: 'request' | 'response' | 'error' | 'info', content: any) => void
 ): Promise<MainStoryArc> => {
-    const ai = getAIClient();
-    
     let lengthInstruction = "";
     if (gameLength === 'short') lengthInstruction = "Design a SHORT, fast-paced adventure. The plot should move quickly.";
     if (gameLength === 'long') lengthInstruction = "Design a LONG, epic saga. The plot should be intricate and slow-burning.";
@@ -85,10 +76,10 @@ export const generateMainStory = async (
         const actualModel = modelName === StoryModel.SmartLowThinking ? StoryModel.Smart : modelName;
         const thinkingConfig = modelName === StoryModel.SmartLowThinking ? { thinkingLevel: "low" as any } : undefined;
 
-        const response = await ai.models.generateContent({
-            model: actualModel,
-            contents: { parts: [{ text: prompt }] },
-            config: {
+        const response = await generateContentServer(
+            actualModel,
+            prompt,
+            {
                 thinkingConfig,
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -112,7 +103,7 @@ export const generateMainStory = async (
                     }
                 }
             }
-        });
+        );
 
         const text = response.text;
         if (onLog) onLog('response', text);
@@ -140,7 +131,6 @@ export const generateStoryStep = async (
   onLog?: (type: 'request' | 'response' | 'error' | 'info', content: any) => void,
   mainStoryArc?: MainStoryArc
 ): Promise<AIStoryResponse> => {
-  const ai = getAIClient();
   
   let actionDescription = "";
 
@@ -244,10 +234,10 @@ export const generateStoryStep = async (
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: actualModel,
-      contents: prompt,
-      config: {
+    const response = await generateContentServer(
+      actualModel,
+      prompt,
+      {
         thinkingConfig,
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -332,7 +322,7 @@ export const generateStoryStep = async (
           required: ["narrative", "choices", "game_status"]
         }
       }
-    });
+    );
 
     const text = response.text;
     if (!text) throw new Error("No response text from AI");
@@ -368,7 +358,6 @@ export const generateGameSummary = async (
     historyText: string,
     onLog?: (type: 'request' | 'response' | 'error', content: any) => void
 ): Promise<string> => {
-  const ai = getAIClient();
   const prompt = `
   Read the following adventure log and write a concise, engaging summary (3-5 sentences) of the entire journey. 
   Highlight the key conflicts, major decisions, and how it ended.
@@ -380,10 +369,10 @@ export const generateGameSummary = async (
   if (onLog) onLog('request', `[SUMMARY GENERATION]\n${prompt}`);
 
   try {
-      const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt
-      });
+      const response = await generateContentServer(
+          'gemini-2.5-flash',
+          prompt
+      );
       const text = response.text || "The tale is lost to the void.";
       if (onLog) onLog('response', `[SUMMARY RESULT]\n${text}`);
       return text;
@@ -398,7 +387,6 @@ export const generateStoryboard = async (
     summary: string,
     onLog?: (type: 'request' | 'response' | 'error', content: any) => void
 ): Promise<string | null> => {
-    const ai = getAIClient();
     // High quality image model for the final reward
     const prompt = `
     Create a single high-quality image that looks like a comic book page or storyboard.
@@ -414,16 +402,16 @@ export const generateStoryboard = async (
     if (onLog) onLog('request', `[IMAGE GENERATION]\n${prompt}`);
 
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-image-preview',
-            contents: { parts: [{ text: prompt }] },
-            config: {
+        const response = await generateContentServer(
+            'gemini-3-pro-image-preview',
+            prompt,
+            {
                 imageConfig: {
                     aspectRatio: "16:9",
                     imageSize: ImageSize.Size_2K 
                 }
             }
-        });
+        );
 
         for (const part of response.candidates?.[0]?.content?.parts || []) {
             if (part.inlineData) {

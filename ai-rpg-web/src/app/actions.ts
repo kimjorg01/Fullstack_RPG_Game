@@ -14,7 +14,11 @@ export async function generateContentServer(model: string, prompt: string, confi
       contents: { parts: [{ text: prompt }] },
       config: config
     });
-    return response.text;
+    // Return necessary parts for client handling (text for stories, candidates for images)
+    return {
+      text: response.text,
+      candidates: response.candidates
+    };
   } catch (error: any) {
     console.error("Server AI Error:", error);
     throw new Error(error.message || "AI Generation failed");
