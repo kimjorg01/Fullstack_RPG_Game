@@ -22,6 +22,8 @@ import { Menu, Send, Settings, Dices, AlertTriangle, CheckCircle2, Skull, Sparkl
 import { DebugConsole, LogEntry } from './DebugConsole';
 import { createClient } from '../utils/supabase/client';
 import { AuthScreen } from './AuthScreen';
+import { useAuth } from './AuthProvider';
+import { CloudLoadModal } from './CloudLoadModal';
 
 const BASE_HP = 100;
 const DEFAULT_STATS = { STR: 10, DEX: 10, CON: 10, INT: 10, CHA: 10, PER: 10, LUK: 10 };
@@ -145,18 +147,11 @@ const App: React.FC = () => {
   const [debugLogs, setDebugLogs] = useState<LogEntry[]>([]);
 
   // Auth State
-  const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setAuthLoading(false);
-    };
-    checkUser();
-  }, []);
+  
+  // Cloud Load Modal State
+  const [showCloudLoad, setShowCloudLoad] = useState(false);
 
   // Auto-open Game Over screen when game ends
   useEffect(() => {
@@ -1202,33 +1197,12 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCloudLoad = async () => {
-      if (!user) return;
-
-      const { data, error } = await supabase
-          .from('saves')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .single();
-
-      if (error) {
-          addLog('error', `Cloud Load Failed: ${error.message}`);
-          alert('Failed to load from cloud!');
-          return;
-      }
-
-      if (data && data.game_state) {
-          const loadedData = data.game_state as SaveData;
-          setGameState(loadedData.gameState);
-          setCurrentChoices(loadedData.currentChoices);
-          setSettings(loadedData.settings);
-          addLog('info', 'Game loaded from cloud successfully');
-          alert('Game loaded from cloud!');
-      } else {
-          alert('No cloud save found.');
-      }
+  const executeCloudLoad = (loadedData: SaveData) => {
+      setGameState(loadedData.gameState);
+      setCurrentChoices(loadedData.currentChoices);
+      setSettings(loadedData.settings);
+      setShowCloudLoad(false);
+      addLog('info', 'Game loaded from cloud successfully');
   };
   
   const handleDownloadLog = () => {
@@ -1297,9 +1271,8 @@ const App: React.FC = () => {
       }}
     >
       {!user && (
-        <AuthScreen onAuthSuccess={async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+        <AuthScreen onAuthSuccess={() => {
+            // AuthProvider handles state update automatically via onAuthStateChange
         }} />
       )}
       
@@ -1354,7 +1327,11 @@ const App: React.FC = () => {
 
       {/* --- Main Menu Phase --- */}
       {gameState.phase === 'menu' && (
-        <MainMenu onNewGame={handleNewGame} onLoadGame={handleLoadGame} />
+        <MainMenu 
+            onNewGame={handleNewGame} 
+            onLoadGame={handleLoadGame} 
+            onCloudLoad={() => setShowCloudLoad(true)}
+        />
       )}
 
       {/* --- Setup Phases --- */}
@@ -1636,7 +1613,16 @@ const App: React.FC = () => {
         onLoadGame={handleLoadGame}
         onResetGame={handleRestart}
         onCloudSave={handleCloudSave}
-        onCloudLoad={handleCloudLoad}
+        onCloudLoad={() => {
+            setShowSettings(false);
+            setShowCloudLoad(true);
+        }}
+      />
+      
+      <CloudLoadModal
+        isOpen={showCloudLoad}
+        onClose={() => setShowCloudLoad(false)}
+        onLoad={executeCloudLoad}
       />
       
       <CustomChoiceModal

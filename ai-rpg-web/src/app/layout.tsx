@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Lato } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "../components/AuthProvider";
 
 // Configure the fonts
 const cinzel = Cinzel({ subsets: ["latin"], variable: "--font-cinzel" });
@@ -19,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lato.className} ${cinzel.variable} bg-zinc-950 text-zinc-200 overflow-hidden`}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

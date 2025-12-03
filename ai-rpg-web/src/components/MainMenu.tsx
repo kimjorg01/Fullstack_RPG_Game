@@ -1,13 +1,14 @@
 
 import React, { useRef } from 'react';
-import { Sword, Upload } from 'lucide-react';
+import { Sword, Upload, Cloud } from 'lucide-react';
 
 interface MainMenuProps {
   onNewGame: () => void;
   onLoadGame: (file: File) => void;
+  onCloudLoad: () => void;
 }
 
-export const MainMenu: React.FC<MainMenuProps> = ({ onNewGame, onLoadGame }) => {
+export const MainMenu: React.FC<MainMenuProps> = ({ onNewGame, onLoadGame, onCloudLoad }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,11 +41,19 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onNewGame, onLoadGame }) => 
         </button>
         
         <button 
+          onClick={onCloudLoad}
+          className="flex items-center justify-center gap-4 px-8 py-5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg font-bold cinzel text-xl border border-zinc-800 hover:border-zinc-700 transition-all"
+        >
+          <Cloud size={24} />
+          Load from Cloud
+        </button>
+
+        <button 
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center justify-center gap-4 px-8 py-5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg font-bold cinzel text-xl border border-zinc-800 hover:border-zinc-700 transition-all"
         >
           <Upload size={24} />
-          Load Game
+          Load from File
         </button>
         <input 
           type="file" 
