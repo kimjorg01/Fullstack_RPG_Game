@@ -1,25 +1,25 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { LeftSidebar } from './components/LeftSidebar';
-import { RightSidebar } from './components/RightSidebar';
-import { StoryFeed } from './components/StoryFeed';
-import { SettingsModal } from './components/SettingsModal';
-import { GenreSelect } from './components/GenreSelect';
-import { StatBuilder } from './components/StatBuilder';
-import { DiceRoller } from './components/DiceRoller';
-import { MainMenu } from './components/MainMenu';
-import { GameOverScreen } from './components/GameOverScreen';
-import { CustomChoiceModal } from './components/CustomChoiceModal';
-import { LevelUpModal } from './components/LevelUpModal';
-import { GameState, StoryTurn, AppSettings, ImageSize, StoryModel, GamePhase, CharacterStats, ChoiceData, RollResult, SaveData, InventoryItem, EquippedGear, StatExperience, LevelUpEvent, StatusEffect, StatType, NPC, UIScale, MainStoryArc, GameLength } from './types';
-import { generateStoryStep, generateGameSummary, generateStoryboard, generateMainStory } from './services/gemini';
-import { createItemFromString } from './services/itemFactory';
-import { inferStatFromText } from './services/statInference';
-import { generateSideQuests, checkQuestProgress } from './services/questSystem';
-import { calculateInjury, calculateHotStreak } from './services/statusEffects';
+import { LeftSidebar } from './LeftSidebar';
+import { RightSidebar } from './RightSidebar';
+import { StoryFeed } from './StoryFeed';
+import { SettingsModal } from './SettingsModal';
+import { GenreSelect } from './GenreSelect';
+import { StatBuilder } from './StatBuilder';
+import { DiceRoller } from './DiceRoller';
+import { MainMenu } from './MainMenu';
+import { GameOverScreen } from './GameOverScreen';
+import { CustomChoiceModal } from './CustomChoiceModal';
+import { LevelUpModal } from './LevelUpModal';
+import { GameState, StoryTurn, AppSettings, ImageSize, StoryModel, GamePhase, CharacterStats, ChoiceData, RollResult, SaveData, InventoryItem, EquippedGear, StatExperience, LevelUpEvent, StatusEffect, StatType, NPC, UIScale, MainStoryArc, GameLength } from '../types';
+import { generateStoryStep, generateGameSummary, generateStoryboard, generateMainStory } from '../services/gemini';
+import { createItemFromString } from '../services/itemFactory';
+import { inferStatFromText } from '../services/statInference';
+import { generateSideQuests, checkQuestProgress } from '../services/questSystem';
+import { calculateInjury, calculateHotStreak } from '../services/statusEffects';
 import { Menu, Send, Settings, Dices, AlertTriangle, CheckCircle2, Skull, Sparkles, User, Backpack, Sword, Zap, Shield, Brain, Crown, Circle, Eye, Clover, Terminal, Loader2, RefreshCw, ChevronRight, Trophy } from 'lucide-react';
-import { DebugConsole, LogEntry } from './components/DebugConsole';
+import { DebugConsole, LogEntry } from './DebugConsole';
 
 const BASE_HP = 100;
 const DEFAULT_STATS = { STR: 10, DEX: 10, CON: 10, INT: 10, CHA: 10, PER: 10, LUK: 10 };
@@ -403,7 +403,8 @@ const App: React.FC = () => {
         finalSummary: undefined,
         finalStoryboard: undefined,
         activeSideQuests: [],
-        pendingLevelUps: 0
+        pendingLevelUps: 0,
+        rerollTokens: 1
     }));
   };
 
@@ -1089,14 +1090,19 @@ const App: React.FC = () => {
         hp: BASE_HP,
         maxHp: BASE_HP,
         hpHistory: [BASE_HP],
+        statHistory: [DEFAULT_STATS],
         gameStatus: 'ongoing',
         phase: 'menu', 
         genre: 'Fantasy',
+        gameLength: 'medium',
         stats: DEFAULT_STATS,
-        statExperience: { STR: 0, DEX: 0, CON: 0, INT: 0, CHA: 0 },
+        statExperience: { STR: 0, DEX: 0, CON: 0, INT: 0, CHA: 0, PER: 0, LUK: 0 },
         activeEffects: [],
         startingStats: DEFAULT_STATS,
         customChoicesRemaining: 1,
+        activeSideQuests: [],
+        pendingLevelUps: 0,
+        rerollTokens: 1,
         finalSummary: undefined,
         finalStoryboard: undefined
     });
