@@ -21,7 +21,6 @@ import { calculateInjury, calculateHotStreak } from '../services/statusEffects';
 import { Menu, Send, Settings, Dices, AlertTriangle, CheckCircle2, Skull, Sparkles, User, Backpack, Sword, Zap, Shield, Brain, Crown, Circle, Eye, Clover, Terminal, Loader2, RefreshCw, ChevronRight, Trophy, Cloud, CloudLightning } from 'lucide-react';
 import { DebugConsole, LogEntry } from './DebugConsole';
 import { createClient } from '../utils/supabase/client';
-import { AuthScreen } from './AuthScreen';
 import { useAuth } from './AuthProvider';
 import { CloudLoadModal } from './CloudLoadModal';
 
@@ -1262,19 +1261,14 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="flex h-screen bg-black text-zinc-100 font-sans overflow-hidden relative transition-all duration-300"
+      className="flex h-full bg-black text-zinc-100 font-sans overflow-hidden relative transition-all duration-300"
       style={{ 
           zoom: settings.uiScale || 1,
           // Compensate for zoom to keep viewport fitting exactly
-          width: `${100 / (settings.uiScale || 1)}vw`,
-          height: `${100 / (settings.uiScale || 1)}vh`
+          width: `${100 / (settings.uiScale || 1)}%`,
+          height: `${100 / (settings.uiScale || 1)}%`
       }}
     >
-      {!user && (
-        <AuthScreen onAuthSuccess={() => {
-            // AuthProvider handles state update automatically via onAuthStateChange
-        }} />
-      )}
       
       {/* --- Settings Button (Menu & Setup Phases) --- */}
       {gameState.phase !== 'playing' && gameState.phase !== 'game_over' && (

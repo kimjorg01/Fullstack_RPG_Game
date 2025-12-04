@@ -1,18 +1,18 @@
+'use client';
+
 import React, { useState } from 'react';
-import { createClient } from '../utils/supabase/client';
+import { createClient } from '../../utils/supabase/client';
 import { Loader2, LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-interface AuthScreenProps {
-  onAuthSuccess: () => void;
-}
-
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
+export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+  const router = useRouter();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +33,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
         });
         if (error) throw error;
       }
-      onAuthSuccess();
+      // Redirect to home on success
+      router.push('/');
+      router.refresh();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -42,7 +44,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 max-w-md w-full shadow-2xl">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-zinc-100 mb-2">
@@ -114,4 +116,4 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
       </div>
     </div>
   );
-};
+}
