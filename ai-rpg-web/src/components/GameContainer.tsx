@@ -1259,6 +1259,29 @@ const App: React.FC = () => {
     );
   }
 
+  if (gameState.gameStatus === 'lost') {
+    return (
+      <div className="flex h-full bg-black text-zinc-100 font-sans overflow-hidden relative">
+        <GameOverScreen 
+          isOpen={true}
+          onClose={() => {}}
+          gameStatus={gameState.gameStatus}
+          history={gameState.history}
+          stats={currentStats}
+          startingStats={gameState.startingStats}
+          hpHistory={gameState.hpHistory}
+          statHistory={gameState.statHistory}
+          maxHp={gameState.maxHp}
+          summary={gameState.finalSummary}
+          storyboardUrl={gameState.finalStoryboard}
+          onDownloadLog={handleDownloadLog}
+          onRestart={handleRestart}
+          onRegenerateImage={handleRegenerateImage}
+        />
+      </div>
+    );
+  }
+
   return (
     <div 
       className="flex h-full bg-black text-zinc-100 font-sans overflow-hidden relative transition-all duration-300"
