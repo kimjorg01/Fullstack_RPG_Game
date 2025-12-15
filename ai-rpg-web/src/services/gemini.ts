@@ -135,6 +135,13 @@ export const generateStoryStep = async (
   let actionDescription = "";
 
   if (customAction) {
+      if (customAction.item && customAction.item !== "None") {
+        const hasItem = currentInventory.some(i => i.name === customAction.item);
+        if (!hasItem) {
+          throw new Error(`You do not possess that item! (${customAction.item})`);
+        }
+      }
+
       actionDescription = `
       User performs a HEROIC CUSTOM ACTION: "${customAction.text}"
       User claims to be using Item: ${customAction.item || "None"} (VERIFY this is equipped/owned before allowing bonuses).
