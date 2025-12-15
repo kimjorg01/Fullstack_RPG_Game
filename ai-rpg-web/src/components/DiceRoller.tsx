@@ -27,7 +27,6 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ modifier, target, statLa
     const calculatedTotal = rawRoll + modifier;
     
     // 2. Animation Variables
-    let timeoutId: number;
     let frameId: number;
     let startTime = Date.now();
     let duration = 1500; // Base spin duration
@@ -67,7 +66,6 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ modifier, target, statLa
 
     return () => {
         clearTimeout(frameId);
-        clearTimeout(timeoutId);
     };
   }, [modifier, precalculatedRoll]); // Restart animation if roll changes
 
